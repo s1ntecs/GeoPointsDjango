@@ -1,22 +1,21 @@
-from django.http import HttpResponse
-from openpyxl import load_workbook
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, permission_required
 from django.urls import reverse
 
-from .models import Point, Part, PointFile
-from .forms import (PointForm,
-                    ExcelUploadForm,
-                    CoordinateCalculatorForm)
+from .models import Point, PointFile
+from .forms import (PointForm, ExcelUploadForm, CoordinateCalculatorForm)
 from .services import (get_row,
                        find_word,
                        get_column,
-                       safe_cell_value,
-                       CoordinateCalculator)
+                       CoordinateCalculator,
+                       handle_uploaded_file,
+                       COLUMN_MAPPING)
 
 
 def point_list(request):
+    """
+    Отображает список точек.
+    """
     file_name = request.GET.get('file_name')
     if file_name:
         points = Point.objects.filter(point_file__file_name=file_name)
@@ -24,14 +23,18 @@ def point_list(request):
         points = Point.objects.all()
 
     file_names = PointFile.objects.all()
-    return render(request, 'points/point_list.html',
-                  {'points': points,
-                   'file_names': file_names,
-                   'selected_file': file_name})
+    return render(request, 'points/point_list.html', {
+        'points': points,
+        'file_names': file_names,
+        'selected_file': file_name
+    })
 
 
 @login_required
 def point_delete(request, pk):
+    """
+    Удаляет указанную точку.
+    """
     point = get_object_or_404(Point, pk=pk)
     point.delete()
     return redirect(reverse('points:point_list'))
@@ -39,6 +42,9 @@ def point_delete(request, pk):
 
 @login_required
 def point_create(request):
+    """
+    Создает новую точку.
+    """
     if request.method == "POST":
         form = PointForm(request.POST)
         if form.is_valid():
@@ -52,6 +58,9 @@ def point_create(request):
 @login_required
 @permission_required('points.change_point', raise_exception=True)
 def point_edit(request, pk):
+    """
+    Редактирует указанную точку.
+    """
     point = get_object_or_404(Point, pk=pk)
     if request.method == "POST":
         form = PointForm(request.POST, instance=point)
@@ -64,73 +73,51 @@ def point_edit(request, pk):
 
 
 def import_points(request):
+    """
+    Представление страницы Импорта точек из файла Excel.
+    """
     if request.method == 'POST':
-        print("XUI")
         form = ExcelUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            print("PIZDA")
-            excel_file = request.FILES['file']
-            range_str = form.cleaned_data['range_str']
-
-            try:
-                wb = load_workbook(excel_file)
-                sheet = wb.active
-            except Exception as e:
-                print(f"Error loading workbook: {e}")
-                return HttpResponse("Error loading workbook")
-
-            try:
-                point_file = PointFile.objects.create(
-                    file_name=excel_file.name)
-            except Exception as e:
-                print(f"Error creating PointFile: {e}")
-                return HttpResponse("Error creating PointFile")
-
-            for row in sheet[range_str]:
-                try:
-                    idx = row[0].row if len(row) > 0 else None
-                    name = safe_cell_value(row, 0)
-                    x = safe_cell_value(row, 1)
-                    y = safe_cell_value(row, 2)
-                    z = safe_cell_value(row, 3)
-                    part_name = safe_cell_value(row, 4)
-                    part, created = Part.objects.get_or_create(name=part_name)
-
-                    Point.objects.create(
-                        name=name,
-                        x=x,
-                        y=y,
-                        z=z,
-                        part=part,
-                        point_file=point_file,
-                        row_number=idx
-                        )
-                except Exception as e:
-                    print(f"Error processing row {row}: {e}")
-
+            handle_uploaded_file(request.FILES['file'],
+                                 form.cleaned_data['range_str'])
             return redirect('points:point_list')
     else:
         form = ExcelUploadForm()
     return render(request, 'points/import_points.html', {'form': form})
 
 
-def create_point(request):
-    if request.method == 'POST':
-        form = PointForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('points:point_list')
-    else:
-        form = PointForm()
-    return render(request, 'points/point_form.html', {'form': form})
-
-
 def point_analysis(request):
+    """
+    Представление страницы Анализа данных.
+    """
     points = Point.objects.all()
 
     row_number = request.GET.get('row_number')
     column_name = request.GET.get('column_name')
     search_word = request.GET.get('search_word')
+    cell_number = request.GET.get('cell_number')
+
+    cell_data = None
+
+    if cell_number:
+        column_key = cell_number[0].upper()
+        row_num = cell_number[1:]
+
+        if column_key in COLUMN_MAPPING and row_num.isdigit():
+            row_num = int(row_num)
+            point = points.filter(row_number=row_num).first()
+            if point:
+                if column_key == 'A':
+                    cell_data = point.name
+                elif column_key == 'B':
+                    cell_data = point.x
+                elif column_key == 'C':
+                    cell_data = point.y
+                elif column_key == 'D':
+                    cell_data = point.z
+                elif column_key == 'E':
+                    cell_data = point.part.name
 
     row_data = get_row(points, row_number) if row_number else None
     column_data = get_column(points, column_name) if column_name else None
@@ -140,13 +127,18 @@ def point_analysis(request):
         'row_data': row_data,
         'column_data': column_data,
         'word_locations': word_locations,
+        'cell_data': cell_data,
         'row_number': row_number,
         'column_name': column_name,
         'search_word': search_word,
+        'cell_number': cell_number,
     })
 
 
 def coordinate_calculator(request):
+    """
+    Вычисляет сумму или разность координат двух точек.
+    """
     result = None
 
     if request.method == 'POST':
