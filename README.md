@@ -44,4 +44,4 @@ python3 manage.py runserver
 
 ### Функционал:
 
-
+![Скриншот](docs/1.png)
