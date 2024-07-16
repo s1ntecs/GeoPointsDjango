@@ -33,7 +33,8 @@ class CoordinateCalculator:
     @staticmethod
     def subtract_coordinates(point_a: PointData, point_b: PointData) -> Point:
         """
-        Вычитает координаты второй точки из координат первой и возвращает новую точку.
+        Вычитает координаты второй точки из координат
+        первой и возвращает новую точку.
 
         """
         return Point(x=point_a.x - point_b.x,
@@ -87,7 +88,8 @@ def column_letter(n):
 
 
 def safe_cell_value(row, index):
-    return row[index].value if index < len(row) and row[index].value is not None else 'нет данных'
+    return row[index].value if index < len(row) and \
+        row[index].value is not None else 'нет данных'
 
 
 def process_sheet(sheet, range_str, point_file):
