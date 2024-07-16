@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+    <h1>Калькулятор координат</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group" style="display: flex; justify-content: center; align-items: center;">
+        <label for="ax" style="width: 100px;">Первая точка</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" name="ax" value="{{ form.ax.value|default_if_none:'' }}" class="form-control" placeholder="X">
+          <input type="text" name="ay" value="{{ form.ay.value|default_if_none:'' }}" class="form-control" placeholder="Y">
+          <input type="text" name="az" value="{{ form.az.value|default_if_none:'' }}" class="form-control" placeholder="Z">
+        </div>
+      </div>
+      <div class="form-group" style="display: flex; justify-content: center; align-items: center;">
+        <label for="bx" style="width: 100px;">Вторая точка</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" name="bx" value="{{ form.bx.value|default_if_none:'' }}" class="form-control" placeholder="X">
+          <input type="text" name="by" value="{{ form.by.value|default_if_none:'' }}" class="form-control" placeholder="Y">
+          <input type="text" name="bz" value="{{ form.bz.value|default_if_none:'' }}" class="form-control" placeholder="Z">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+        <button type="submit" name="add" class="btn btn-primary">Прибавить координаты</button>
+        <button type="submit" name="subtract" class="btn btn-secondary">Отнять координаты</button>
+      </div>
+    </form>
+
+    {% if result %}
+      <h2 style="margin-top: 30px;">Результат:</h2>
+      <p id="result" style="font-size: 1.5em; font-weight: bold;">({{ result.x|stringformat:".2f" }},{{ result.y|stringformat:".2f" }},{{ result.z|stringformat:".2f" }})</p>
+      <div>
+        <button onclick="copyResult()" class="btn btn-success">Скопировать</button>
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function copyResult() {
+      var resultText = document.getElementById("result").innerText;
+      navigator.clipboard.writeText(resultText).then(function() {
+        alert("Результат скопирован в буфер обмена");
+      }, function(err) {
+        console.error('Could not copy text: ', err);
+      });
+    }
+  </script>
+{% endblock %}
+
+<style>
+  .form-control {
+    width: 80px;
+    padding: 5px;
+    font-size: 1em;
+    text-align: center;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+</style>

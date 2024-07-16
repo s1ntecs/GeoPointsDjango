@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Points</h1>
+
+  <form method="get" class="form-inline" style="display: flex; align-items: center; gap: 10px;">
+    <label for="file_name">Выберите файл:</label>
+    <select name="file_name" id="file_name" class="form-control">
+      <option value="">Все файлы</option>
+      {% for file in file_names %}
+        <option value="{{ file.file_name }}" {% if file.file_name == selected_file %}selected{% endif %}>{{ file.file_name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Применить</button>
+  </form>
+
+  <table class="table table-striped" style="margin-top: 20px;">
+    <thead>
+      <tr>
+        <th>Точка</th>
+        <th>X</th>
+        <th>Y</th>
+        <th>Z</th>
+        <th>Часть</th>
+        {% if user.is_superuser or user.is_staff %}
+          <th>Действия</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for point in points %}
+        <tr>
+          <td>{{ point.name }}</td>
+          <td>{{ point.x }}</td>
+          <td>{{ point.y }}</td>
+          <td>{{ point.z }}</td>
+          <td>{{ point.part.name }}</td>
+          {% if user.is_superuser or user.is_staff %}
+            <td style="display: flex; gap: 5px;">
+              <a href="{% url 'points:point_edit' point.pk %}" class="btn btn-warning btn-sm action-button">Изменить</a>
+              <form method="post" action="{% url 'points:point_delete' point.pk %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm action-button">Удалить</button>
+              </form>
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if user.is_superuser or user.is_staff %}
+    <a href="{% url 'points:point_create' %}" class="btn btn-success">Добавить точку</a>
+  {% endif %}
+{% endblock %}
+
+<style>
+  .action-button {
+    flex: 1;
+    text-align: center;
+    padding: 5px 10px;
+  }
+</style>

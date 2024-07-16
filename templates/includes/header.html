@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}GeoPoints{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .navbar-custom {
+            background-color: #343a40;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+        }
+        .navbar-brand img {
+            margin-right: 10px;
+        }
+        .navbar-brand span {
+            color: white;
+            font-weight: bold;
+        }
+        .nav-link {
+            color: white !important;
+            font-size: 0.9rem;
+            margin-left: 15px;
+        }
+        .navbar-nav {
+            flex-direction: row;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+        }
+        .user-info {
+            color: white;
+            margin-left: 15px;
+        }
+        .logout-form {
+            display: inline;
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+<header>
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'points:point_list' %}">
+        <span>GeoPoints</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          {% if request.user.is_authenticated %}
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'points:point_create' %}">Создать точку</a>
+          </li>
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'points:coordinate_calculator' %}">Калькулятор</a>
+          </li>
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'points:import_points' %}">Импорт Excel</a>
+          </li>
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'users:password_change' %}">Изменить пароль</a>
+          </li>
+          <li class="nav-item"> 
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-link nav-link" style="padding: 0; margin: 0;">Выйти</button>
+            </form>
+          </li>
+          <li class="nav-item user-info">
+            Сотрудник: {{ user.username }}
+          </li>
+          {% else %}
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'users:login' %}">Войти</a>
+          </li>
+          <li class="nav-item"> 
+            <a class="nav-link" href="{% url 'users:signup' %}">Регистрация</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>      
+</header>
+<div class="container">
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

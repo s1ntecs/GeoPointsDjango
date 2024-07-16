@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="text-center mb-4">Импортировать Excel Таблицу</h1>
+  <form method="post" enctype="multipart/form-data" class="form text-center">
+    {% csrf_token %}
+    <div class="form-group">
+      {{ form.as_p }}
+    </div>
+    <div class="d-flex justify-content-center">
+      <button type="submit" class="btn btn-primary mx-2" style="width: 150px;">Загрузить данные</button>
+      <button type="button" class="btn btn-secondary mx-2" style="width: 150px;" onclick="window.location.href='{% url 'points:point_list' %}'">Отменить</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+<style>
+  .form-group {
+    text-align: left;
+    display: inline-block;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .btn-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .btn {
+    width: 150px; /* задает одинаковую ширину для всех кнопок */
+  }
+  .text-center {
+    text-align: center;
+  }
+</style>

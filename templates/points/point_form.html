@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+    <h1 style="margin-bottom: 20px;">Создание новой точки</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-row">
+        <div class="form-group col-md-4" style="text-align: left; padding-right: 20px;">
+          <label for="id_name">Имя</label>
+        </div>
+        <div class="form-group col-md-8">
+          {{ form.name }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4" style="text-align: left; padding-right: 50px;">
+          <label for="id_x">X координата</label>
+        </div>
+        <div class="form-group col-md-8">
+          {{ form.x }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4" style="text-align: left; padding-right: 20px;">
+          <label for="id_y">Y координата</label>
+        </div>
+        <div class="form-group col-md-8">
+          {{ form.y }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4" style="text-align: left; padding-right: 20px;">
+          <label for="id_z">Z координата</label>
+        </div>
+        <div class="form-group col-md-8">
+          {{ form.z }}
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group col-md-4" style="text-align: left; padding-right: 20px;">
+          <label for="id_part">Часть</label>
+        </div>
+        <div class="form-group col-md-8">
+          {{ form.part }}
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="{% url 'points:point_list' %}" class="btn btn-secondary">Отменить</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
+
+<style>
+  .form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .form-group label {
+    font-weight: bold;
+    margin-bottom: 0;
+  }
+
+  .form-group.col-md-4 {
+    text-align: right;
+    padding-right: 20px;
+  }
+
+  .form-group.col-md-8 {
+    padding-left: 10px;
+    flex: 1;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    box-sizing: border-box;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 1em;
+  }
+
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+
+  .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+</style>
