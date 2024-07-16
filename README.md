@@ -36,6 +36,18 @@ pip install -r requirements.txt
 python3 manage.py migrate
 ```
 
+Запустите команду создания суперпользователя
+```
+python manage.py createsuperuser
+```
+Следуйте инструкциям
+```
+Username: admin
+Email address: admin@example.com
+Password: ********
+Password (again): ********
+```
+
 Запустить проект:
 
 ```
