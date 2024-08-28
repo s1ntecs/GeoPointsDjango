@@ -1,74 +1,100 @@
 import component_properties as comp_table
 from datetime import datetime
 import numpy as np
-import matplotlib.pyplot as plt
 import flashalgorithm as fc
+import vlhc_srk_eos as hc
+import aq_hb_eos as aq
+import h_vdwpm_eos as hyd
+import matplotlib.pyplot as plt
 
-# Функция для создания списка компонентов
-def create_components(comps):
-    comp_list = [comp_table.Component(ii) for ii in comps]
-    return comp_list
+startTime = datetime.now()
 
-# Функция для выполнения расчета фазового равновесия и возврата фракций фаз S1 и S2
-def run_flash_analysis(comp_list, P, T, meoh):
-    # Обновляем состав компонента с измененным содержанием MeOH
-    z = np.array([0.22, 0.65, 0.03, 0.08, meoh])
-    
-    # Инициализация FlashController
-    flash = fc.FlashController(components=[comp.compname for comp in comp_list])
-    output = flash.main_handler(compobjs=flash.compobjs, z=z, T=T, P=P)
-    
-    # Определяем стабильные фазы
-    stable_dict = {phase: ii for ii, (phase, alpha) in enumerate(zip(flash.phases, flash.alpha_calc)) if alpha > 1e-10}
-    
-    # Возвращаем фракции фаз S1 и S2
-    s1_fraction = flash.alpha_calc[stable_dict.get('S1', -1)] if 'S1' in stable_dict else 0
-    s2_fraction = flash.alpha_calc[stable_dict.get('S2', -1)] if 'S2' in stable_dict else 0
-    
-    return s1_fraction, s2_fraction
+# Определение компонентов
+comps = ['h2o', 'n2', 'co2', "ch4", "meoh"]
+comp_list = [comp_table.Component(ii) for ii in comps]
 
-# Параметры для анализа
-P_list = np.linspace(50, 150, 5)  # Давление от 50 до 150 бар
-T_list = np.linspace(250, 350, 5)  # Температура от 250 до 350 К
-meoh_list = np.linspace(0.01, 0.1, 5)  # Содержание MeOH от 1% до 10%
+# Инициализация параметров
+meoh = 0.006
+MEOH_LIM = 0.008
+MEOH_STEP = 0.001
+P_values = np.arange(130, 136, 5)  # Давление от 130 до 135 с шагом 5
+T_values = np.arange(260, 266, 5)  # Температура от 260 до 265 с шагом 5
 
-# Определение изначальных компонентов
-comps = ['h2o', 'n2', 'co2', 'ch4', 'meoh']
-comp_list = create_components(comps)
+results = []
 
-# Подготовка данных для графиков
-s1_data = []
-s2_data = []
-params = []
+flash = fc.FlashController(components=['water',
+                                       'methane',
+                                       "ethane",
+                                       "propane",
+                                       "i-butane",
+                                       "n-butane",
+                                       "i-pentane",
+                                       "n-pentane",
+                                       "n-hexane",
+                                       "meoh"])
 
-for P in P_list:
-    for T in T_list:
-        for meoh in meoh_list:
-            s1_fraction, s2_fraction = run_flash_analysis(comp_list, P, T, meoh)
-            s1_data.append(s1_fraction)
-            s2_data.append(s2_fraction)
-            params.append((P, T, meoh))
+# Основной цикл расчета
+for P in P_values:
+    for T in T_values:
+        meoh = 0.006
+        while meoh <= MEOH_LIM:
+            output = flash.main_handler(
+                        compobjs=flash.compobjs,
+                        z=np.asarray([0.0220,
+                                    0.9258,
+                                    0.0299,
+                                    0.005,
+                                    0.0058,
+                                    0.0025,
+                                    0.002,
+                                    0.00025,
+                                    0.00025,
+                                    meoh]),
+                        T=T,
+                        P=P)
+            stable_dict = {phase: ii for ii, (phase, alpha) in
+                            enumerate(zip(flash.phases, flash.alpha_calc))}
+            for phase, index in stable_dict.items():
+                if phase == 's2':  # Извлекаем только данные для s2
+                    results.append({
+                        "Pressure": P,
+                        "Temperature": T,
+                        "MeOH": meoh,
+                        "s2": flash.alpha_calc[index]
+                    })
+            meoh += MEOH_STEP
 
-# Построение графиков
+endTime = datetime.now()
+print("Время выполнения: ", endTime - startTime)
 
-# График для фазы S1
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-for i in range(len(P_list) * len(T_list)):
-    plt.plot(meoh_list, s1_data[i*len(meoh_list):(i+1)*len(meoh_list)], label=f'P={params[i][0]} bar, T={params[i][1]} K')
-plt.xlabel('Содержание MeOH')
-plt.ylabel('Фракция фазы S1')
-plt.title('Фаза S1 в зависимости от содержания MeOH')
+# Построение графиков зависимости S2 от объема метанола при различных давлениях и температурах
+plt.figure(figsize=(14, 8))
+
+# График для каждого значения давления
+for P in P_values:
+    plt.subplot(2, 1, 1)
+    subset = [res for res in results if res["Pressure"] == P]
+    meoh_values = [res["MeOH"] for res in subset]
+    s2_values = [res["s2"] for res in subset]
+    plt.plot(meoh_values, s2_values, marker='o', label=f'P = {P} bar')
+
+plt.title("S2 vs MeOH Volume for Different Pressures")
+plt.xlabel("MeOH Volume (fraction)")
+plt.ylabel("S2")
 plt.legend()
 plt.grid(True)
 
-# График для фазы S2
-plt.subplot(1, 2, 2)
-for i in range(len(P_list) * len(T_list)):
-    plt.plot(meoh_list, s2_data[i*len(meoh_list):(i+1)*len(meoh_list)], label=f'P={params[i][0]} bar, T={params[i][1]} K')
-plt.xlabel('Содержание MeOH')
-plt.ylabel('Фракция фазы S2')
-plt.title('Фаза S2 в зависимости от содержания MeOH')
+# График для каждого значения температуры
+for T in T_values:
+    plt.subplot(2, 1, 2)
+    subset = [res for res in results if res["Temperature"] == T]
+    meoh_values = [res["MeOH"] for res in subset]
+    s2_values = [res["s2"] for res in subset]
+    plt.plot(meoh_values, s2_values, marker='o', label=f'T = {T} K')
+
+plt.title("S2 vs MeOH Volume for Different Temperatures")
+plt.xlabel("MeOH Volume (fraction)")
+plt.ylabel("S2")
 plt.legend()
 plt.grid(True)
 
