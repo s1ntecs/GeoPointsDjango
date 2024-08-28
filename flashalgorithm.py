@@ -782,9 +782,6 @@ class FlashController(object):
         self.x_calc = np.zeros([len(self.compobjs), len(self.phases)])
         self.alpha_calc = np.zeros([len(self.phases)])
         self.theta_calc = np.zeros([len(self.phases)])
-        # print("/////////INIT///////////")
-        print(f"/////////INIT/////////// {self.phases}")
-        print(list(zip(self.phases, (self.alpha_calc))))
         # [print(x.compname) for x in self.compobjs]
         # print("////////////////////")
         # print(f"INIT PHASES {[self.compobjs}")
@@ -948,26 +945,15 @@ class FlashController(object):
                                       'x': np.zeros_like(K_0),
                                       'inner': [],
                                       'error': []}])
-            print(f"/////////PHASE1///////////")
-            print(list(zip(self.phases, (self.alpha_calc))))
-            
-            
 
             alpha_new, theta_new = self.find_alphatheta_min(z, alpha_0,
                                                             theta_0, K_0,
                                                             monitor_calc=monitor_calc)
-            print(f"/////////alpha_new INIT ///////////")
-            print(list(zip(self.phases, (alpha_new))))
             
             x_new = self.calc_x(z, alpha_new, theta_new, K_0, T, P)
             fug_new = self.calc_fugacity(T, P, x_new)
             x_new = self.calc_x(z, alpha_new, theta_new, K_0, T, P)
             K_new = self.calc_K(T, P, x_new)
-            print(f"/////////PHASE2///////////")
-            print(list(zip(self.phases, (alpha_new))))
-            # print("/////////PHASE2///////////")
-            # [print(x.compname) for x in self.compobjs]
-            # print("////////////////////")
 
             if monitor_calc:
                 self.monitor.append([{'alpha': alpha_new,
@@ -987,8 +973,8 @@ class FlashController(object):
                 print('First theta:\n', theta_new)
 
         else:
-            print(f"/////////PHASE3///////////")
-            print(list(zip(self.phases, (alpha_new))))
+            # print(f"/////////PHASE3///////////")
+            # print(list(zip(self.phases, (alpha_new))))
             # print("/////////PHASE3///////////")
             # [print(x.compname) for x in self.compobjs]
             # print("////////////////////")
@@ -1016,8 +1002,6 @@ class FlashController(object):
                                       'x': x_new,
                                       'inner': self.iter_output,
                                       'error': []}])
-        print(f"/////////PHASE4///////////")
-        print(list(zip(self.phases, (alpha_new))))
         # print("/////////PHASE4///////////")
         # [print(x.compname) for x in self.compobjs]
         # print("////////////////////")
@@ -1032,14 +1016,11 @@ class FlashController(object):
         theta_old = theta_new.copy()
         x_old = x_new.copy()
         K_old = K_new.copy()
-        print(f"/////////PHASE5///////////")
-        print(list(zip(self.phases, (alpha_new))))
         # ('s2', np.float64(0.07662174670381046))
 
         while error > TOL and itercount < iterlim:
             # Perform newton iteration to update alpha and theta at
             # a fixed x and K
-            print(itercount)
             self.iter_output = {}
             
             """ ОСНОВНОЕ ВЫЧИСЛЕНИЕ find_alphatheta_min """
@@ -1140,17 +1121,10 @@ class FlashController(object):
                 print('K = \n', K_new)
                 print('Composition error: ', x_error)
                 print('objective function error: ', Obj_error)
-            print(f" ERROR = {error} TOL = {TOL}, iterlimit = {iterlim} > TOL and itercount = {itercount}")
-        print(f"/////////PHASE6///////////")
-        # ('s2', np.float64(0.002536630622242742))]
 
-
-        print(list(zip(self.phases, (alpha_new))))
-        
-        
-        
         if verbose:
             print('\nElapsed time =', time.time() - tstart, '\n')
+        print(f"ITER COUNT = {itercount}")
 
         self.K_calc = K_new.copy()
         self.x_calc = x_new.copy()
@@ -1159,8 +1133,6 @@ class FlashController(object):
         self.completed = True
 
         values = [x_new, alpha_new, K_new, itercount, error]
-        print(f"/////////PHASE7///////////")
-        print(list(zip(self.phases, (alpha_new))))
         return values
 
     def calc_x(self, z, alpha, theta, K, T, P):
